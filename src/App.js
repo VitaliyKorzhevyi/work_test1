@@ -15,8 +15,8 @@ function App() {
       <div className="container">
         <Routes>
           <Route path="/" element={<ListEmail />} /> 
-          <Route path="/contact" element={<Proxy />} />
           <Route path="/about" element={<Reserv />} />
+          <Route path="/contact" element={<Proxy />} />
           {/* <Route path="/check-email" element={<CheckEmail />} /> */}
         </Routes>
       </div>

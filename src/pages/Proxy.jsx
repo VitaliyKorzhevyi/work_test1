@@ -10,48 +10,81 @@
 // }
 
 // export default Proxy;
-import { useState } from "react";
+import React, { useState } from "react";
+import "./proxy.css";
 
 export default function Proxy() {
   const [input, setInput] = useState("");
-  const [reversed, setReversed] = useState("");
+  const [output, setOutput] = useState("");
 
-  const handleReverse = () => {
-    const lines = input
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-    setReversed(lines.reverse().join("\n"));
+  const detectTypeAndConvert = (value) => {
+    const lines = value
+      .split(/\n|\r|,/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+
+    const result = lines.map((line) => {
+      // === Тип A: user:pass@ip:port ===
+      if (line.includes("@")) {
+        const [auth, host] = line.split("@");
+        const [user, pass] = auth.split(":");
+        const [ip, port] = host.split(":");
+        const newPort = parseInt(port) + 10000;
+        return `${user}:${pass}@${ip}:${newPort}`;
+      }
+
+      // === Тип B: ip:port:user:pass ===
+      const parts = line.split(":");
+      if (parts.length === 4) {
+        const [ip, port, user, pass] = parts;
+        const newPort = parseInt(port) + 1;
+        return `${ip}:${newPort}:${user}:${pass}`;
+      }
+
+      return line;
+    });
+
+    setOutput(result.join("\n"));
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setInput(value);
+    detectTypeAndConvert(value);
+  };
+
+  const copyOutput = () => {
+    navigator.clipboard.writeText(output);
+  };
+
+  const handleClear = () => {
+    setInput("");
+    setOutput("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
-      <h1 className="text-2xl font-bold mb-4">🔁 Реверс списка строк</h1>
+    <div className="container">
+      <h2>Proxy Converter</h2>
 
       <textarea
-        className="w-full max-w-2xl h-64 p-3 border rounded-lg shadow-sm focus:ring focus:ring-blue-300 outline-none"
-        placeholder="Вставь сюда список..."
+        className="input"
+        placeholder="Вставь список прокси"
         value={input}
-        onChange={e => setInput(e.target.value)}
+        onChange={handleChange}
       />
 
-      <button
-        onClick={handleReverse}
-        className="mt-4 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-      >
-        Реверсировать
+      <textarea
+        className="output"
+        readOnly
+        value={output}
+        onClick={copyOutput}
+      />
+
+      <button className="clear-btn" onClick={handleClear}>
+        Очистить список
       </button>
 
-      {reversed && (
-        <div className="w-full max-w-2xl mt-6">
-          <h2 className="text-lg font-semibold mb-2">Результат:</h2>
-          <textarea
-            className="w-full h-64 p-3 border rounded-lg shadow-sm bg-gray-50"
-            value={reversed}
-            readOnly
-          />
-        </div>
-      )}
+      <p className="note">Нажми на нижнее поле, чтобы скопировать список.</p>
     </div>
   );
 }
